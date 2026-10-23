@@ -1,0 +1,16 @@
+import React from 'react';
+import { localDate } from '../data';
+export default function Calendar({ month, tasks, today, selected, onSelect, onAdd, onEdit, onToggle }) {
+  const [year, number] = month.split('-').map(Number);
+  const first = new Date(year, number - 1, 1, 12);
+  const start = new Date(year, number - 1, 1 - first.getDay(), 12);
+  const weeks = Math.ceil((first.getDay() + new Date(year, number, 0).getDate()) / 7);
+  const days = Array.from({ length: weeks * 7 }, (_, i) => { const day = new Date(start); day.setDate(start.getDate() + i); return { day, key: localDate(day) }; });
+  return <div className="calendar" style={{ '--weeks': weeks }}><div className="weekdays">{['일', '월', '화', '수', '목', '금', '토'].map(day => <span key={day}>{day}</span>)}</div><div className="calendar-grid">{days.map(({ day, key }) => {
+    const items = tasks.filter(t => t.date === key);
+    return <section key={key} aria-label={key} className={`calendar-day ${key.slice(0, 7) !== month ? 'outside' : ''} ${key === today ? 'is-today' : ''} ${key === selected ? 'is-selected' : ''}`}>
+      <div className="day-heading"><button aria-label={`${key} 선택`} aria-pressed={key === selected} onClick={() => onSelect(key)}><span>{day.getDate()}</span>{key === today && <small>오늘</small>}</button><button className="day-add" aria-label={`${key} 일정 추가`} onClick={() => onAdd(key)}>＋</button></div>
+      <div className="day-tasks">{items.map(task => <div className={`calendar-task ${task.completed ? 'completed' : ''}`} key={task.id}><input type="checkbox" checked={task.completed} onChange={() => onToggle(task.id)} aria-label={`${task.title} 완료`}/><button onClick={() => onEdit(task)} title={task.title}>{task.title}</button></div>)}</div>
+    </section>;
+  })}</div></div>;
+}

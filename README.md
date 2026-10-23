@@ -22,6 +22,9 @@ npm run preview
 
 ## 기능과 저장
 
+- 큰 월간 캘린더, 이전·다음 달 이동, 오늘로 이동
+- 날짜 선택 후 같은 화면에서 일정 추가·수정·삭제
+- 달력 안에서 완료 체크, 작업 이름 클릭으로 수정
 - 전체 진행률, 남은 작업, 오늘의 미완료 작업 수
 - 오늘 일정과 다음 일정 안내, 날짜순 전체 일정
 - 완료 체크, 일정 추가·수정·삭제, 검색과 완료 상태 필터
@@ -43,6 +46,7 @@ npm run preview
 
 ```text
 src/App.jsx                 대시보드, 상태 관리, localStorage
+src/components/Calendar.jsx 월간 캘린더와 날짜별 작업
 src/components/TaskForm.jsx 일정 추가·수정 모달
 src/components/TaskRow.jsx  일정 행과 작업 버튼
 src/data.js                 기본 일정, 날짜 및 데이터 유효성 검사
@@ -52,3 +56,9 @@ netlify.toml                Netlify 빌드 설정
 ```
 
 글꼴은 Google Fonts 무료 글꼴을 사용하며 연결이 불가능하면 시스템 글꼴로 표시합니다.
+
+## GitHub Pages 배포
+
+현재 공개 주소: https://10ne2.github.io/plan/
+
+`npm run build -- --base=/plan/`으로 빌드한 뒤 `dist` 내용을 `gh-pages` 브랜치 루트에 배포합니다. `.nojekyll` 빈 파일을 포함하고, 하위 경로 새로고침 지원이 필요하면 `index.html`을 `404.html`로 복사합니다. GitHub Settings → Pages에서 `gh-pages` 브랜치의 `/ (root)`를 선택합니다. 배포 시 같은 주소의 localStorage 데이터는 유지됩니다.
