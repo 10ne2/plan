@@ -1,4 +1,4 @@
-# FLATPOINT Project Planner
+# 일정 캘린더
 
 React + Vite와 일반 CSS로 만든 개인 프로젝트 일정 관리 앱입니다. 기본 일정은 2026년 10월 22일~11월 4일의 14개 작업입니다. 서버나 유료 서비스는 필요하지 않습니다.
 
@@ -55,10 +55,12 @@ public/_redirects           Netlify SPA 라우팅
 netlify.toml                Netlify 빌드 설정
 ```
 
-글꼴은 Google Fonts 무료 글꼴을 사용하며 연결이 불가능하면 시스템 글꼴로 표시합니다.
+글꼴은 Pretendard를 사용하며 public/fonts에 폰트와 SIL OFL 라이선스를 포함합니다. 외부 글꼴 서버 연결 없이 표시됩니다.
 
 ## GitHub Pages 배포
 
 현재 공개 주소: https://10ne2.github.io/plan/
 
 `npm run build -- --base=/plan/`으로 빌드한 뒤 `dist` 내용을 `gh-pages` 브랜치 루트에 배포합니다. `.nojekyll` 빈 파일을 포함하고, 하위 경로 새로고침 지원이 필요하면 `index.html`을 `404.html`로 복사합니다. GitHub Settings → Pages에서 `gh-pages` 브랜치의 `/ (root)`를 선택합니다. 배포 시 같은 주소의 localStorage 데이터는 유지됩니다.
+
+오른쪽 일정 추가 폼에서 이름과 날짜를 입력해 바로 등록할 수 있습니다. 날짜 선택 또는 날짜별 + 버튼으로 폼 날짜를 바꿀 수 있으며, 추가 후 입력란이 비워져 연속 등록할 수 있습니다.
