@@ -33,7 +33,6 @@ export default function App() {
     setNotice('일정을 수정했습니다.');
   }
   function remove(task) { if (window.confirm(`‘${task.title}’ 일정을 삭제할까요?`)) { setTasks(current => current.filter(t => t.id !== task.id)); setEditing(null); setNotice('일정을 삭제했습니다.'); } }
-  function reset() { if (window.confirm('추가·수정한 일정과 완료 상태를 지우고, 2026년 기본 일정 14개로 되돌릴까요?')) { setTasks(initialTasks()); setEditing(null); setMonth('2026-10'); setSelected('2026-10-22'); setFilter('all'); setQuery(''); setNotice('기본 일정으로 초기화했습니다.'); } }
   function toggle(id) { setTasks(current => current.map(t => t.id === id ? { ...t, completed: !t.completed } : t)); }
   function openTask(task) { setEditing(task.id); setSelected(task.date); setMonth(task.date.slice(0, 7)); }
   function navigate(offset) {
@@ -56,7 +55,7 @@ export default function App() {
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
     <Calendar month={month} tasks={visible} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask}/>
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정을 누르면 상세 보기</span></div>
-    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}<button className="reset-button" onClick={reset}>↻ 전체 일정 초기화</button></aside></div>
+    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}</aside></div>
     <div className="feedback" role="status">{storageError || notice}</div></main>
   </div>;
 }
