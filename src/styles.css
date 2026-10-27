@@ -11,4 +11,4 @@
 
 @media(min-width:761px){.calendar-grid{grid-template-rows:var(--calendar-rows);grid-auto-rows:76px}.calendar-panel:has(.calendar[data-has-tasks="false"]){align-self:start}.calendar[data-has-tasks="false"]{flex:none}}
 
-.memo-editor,.memo-editor:focus,.memo-editor:focus-visible{border-color:transparent;outline:none;box-shadow:none}
+.memo-editor{min-height:46px;resize:none;overflow:hidden;border-color:#dce2d1}.memo-content{min-height:46px;border-color:transparent;outline:none;box-shadow:none}
