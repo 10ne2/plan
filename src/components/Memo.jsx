@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 function plainText(text) { return text.split('\n').map(line => line.replace(/^· ?/, '')).join('\n'); }
-function bulletText(text) { return text.split('\n').map(line => `· ${line.replace(/^· ?/, '')}`).join('\n'); }
+function bulletText(text) { return text ? text.split('\n').map(line => line ? `· ${line.replace(/^· ?/, '')}` : '').join('\n') : '· '; }
 function fitHeight(input) {
   if (!input) return;
   input.style.height = '0px';
@@ -40,13 +40,42 @@ export default function Memo({ value, onChange, autoEdit = false, label = '일�
     const input = event.currentTarget;
     const raw = input.value;
     if (composing.current || event.nativeEvent?.isComposing) { setDraft(raw); return; }
-    const normalized = bulletText(raw);
-    if (normalized !== raw) selection.current = [bulletText(raw.slice(0, input.selectionStart)).length, bulletText(raw.slice(0, input.selectionEnd)).length];
+    // Add markers only for newly inserted newlines. Never recreate deleted markers.
+    let start = 0;
+    while (start < draft.length && start < raw.length && draft[start] === raw[start]) start++;
+    let end = 0;
+    while (end < draft.length - start && end < raw.length - start && draft[draft.length - 1 - end] === raw[raw.length - 1 - end]) end++;
+    const insertedEnd = raw.length - end;
+    const inserted = raw.slice(start, insertedEnd);
+    const marked = inserted.replace(/\n(?!·(?: |$))/g, '\n· ');
+    const normalized = raw.slice(0, start) + marked + raw.slice(insertedEnd);
+    if (normalized !== raw) {
+      const mapPosition = position => {
+        if (position <= start) return position;
+        if (position >= insertedEnd) return position + marked.length - inserted.length;
+        return start + inserted.slice(0, position - start).replace(/\n(?!·(?: |$))/g, '\n· ').length;
+      };
+      selection.current = [mapPosition(input.selectionStart), mapPosition(input.selectionEnd)];
+    }
     setDraft(normalized);
     update(plainText(normalized));
   }
+  function keyDown(event) {
+    if (event.nativeEvent.isComposing || composing.current) return;
+    const input = event.currentTarget;
+    if (event.key === 'Escape') { input.blur(); return; }
+    if (event.key !== 'Backspace' || input.selectionStart !== input.selectionEnd) return;
+    const cursor = input.selectionStart;
+    const start = draft.lastIndexOf('\n', cursor - 1) + 1;
+    const beforeCursor = draft.slice(start, cursor);
+    if (beforeCursor === '· ' || beforeCursor === '·') {
+      event.preventDefault();
+      const next = draft.slice(0, start) + draft.slice(cursor);
+      selection.current = [start, start]; setDraft(next); update(plainText(next));
+    }
+  }
   const text = value;
   return <section className="memo-panel" aria-label={label}>
-    {editing ? <textarea ref={editor} className="memo-editor" aria-label={label === '하루 메모' ? '하루 메모 작성' : '메모 작성'} autoFocus rows={1} value={draft} placeholder="메모 입력" onChange={change} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; change(e); }} onBlur={() => { update(plainText(draft)); setEditing(false); }} onKeyDown={e => { if (e.key === 'Escape' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}/> : <button type="button" className={`memo-content ${text ? '' : 'memo-placeholder'}`} aria-label={label === '하루 메모' ? '하루 메모 편집' : '메모 편집'} onClick={startEditing}>{text ? <span className="memo-list" role="list">{text.split('\n').map((line, index) => <span className="memo-list-item" role="listitem" key={index}><span aria-hidden="true">·</span><span>{line.replace(/^· ?/, '') || '\u00a0'}</span></span>)}</span> : label === '하루 메모' ? '클릭하여 하루 메모 작성' : '클릭하여 메모 작성'}</button>}
+    {editing ? <textarea ref={editor} className="memo-editor" aria-label={label === '하루 메모' ? '하루 메모 작성' : '메모 작성'} autoFocus rows={1} value={draft} placeholder="메모 입력" onChange={change} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; change(e); }} onBlur={() => { update(plainText(draft)); setEditing(false); }} onKeyDown={keyDown}/> : <button type="button" className={`memo-content ${text ? '' : 'memo-placeholder'}`} aria-label={label === '하루 메모' ? '하루 메모 편집' : '메모 편집'} onClick={startEditing}>{text ? <span className="memo-list" role="list">{text.split('\n').map((line, index) => <span className="memo-list-item" role="listitem" key={index}><span aria-hidden="true">{line ? '·' : '\u00a0'}</span><span>{line.replace(/^· ?/, '') || '\u00a0'}</span></span>)}</span> : label === '하루 메모' ? '클릭하여 하루 메모 작성' : '클릭하여 메모 작성'}</button>}
   </section>;
 }
