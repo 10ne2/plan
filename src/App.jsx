@@ -4,6 +4,7 @@ import { initialTasks, STORAGE_KEY, validTasks, localDate } from './data';
 import TaskDetails from './components/TaskDetails';
 import Calendar from './components/Calendar';
 import QuickAdd from './components/QuickAdd';
+import Memo from './components/Memo';
 
 export default function App() {
   const quickInput = useRef(null);
@@ -55,7 +56,7 @@ export default function App() {
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
     <Calendar month={month} tasks={visible} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask}/>
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정을 누르면 상세 보기</span></div>
-    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}</aside></div>
+    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}<Memo/></aside></div>
     <div className="feedback" role="status">{storageError || notice}</div></main>
   </div>;
 }
