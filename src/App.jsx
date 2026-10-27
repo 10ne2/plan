@@ -9,6 +9,18 @@ export default function App() {
   const [tasks, setTasks] = useState(() => {
     try { const raw = localStorage.getItem(STORAGE_KEY); if (raw === null) return initialTasks(); const data = JSON.parse(raw); return validTasks(data) ? data : initialTasks(); } catch { return initialTasks(); }
   });
+  const [dailyMemos, setDailyMemos] = useState(() => {
+    try {
+      const notes = JSON.parse(localStorage.getItem('flatpoint-planner-memos-v2') || '{}');
+      if (!notes || typeof notes !== 'object' || Array.isArray(notes) || !Object.entries(notes).every(([date, text]) => /^\d{4}-\d{2}-\d{2}$/.test(date) && typeof text === 'string')) throw new Error('Invalid memos');
+      return { notes, error: '' };
+    } catch { return { notes: {}, error: '하루 메모를 불러오지 못했습니다.' }; }
+  });
+  function updateDayMemo(date, text) {
+    const notes = { ...dailyMemos.notes, [date]: text };
+    try { localStorage.setItem('flatpoint-planner-memos-v2', JSON.stringify(notes)); setDailyMemos({ notes, error: '' }); }
+    catch { setDailyMemos({ notes, error: '하루 메모를 저장하지 못했습니다. 현재 화면에만 유지됩니다.' }); }
+  }
   const [today, setToday] = useState(localDate);
   const [viewDate, setViewDate] = useState(localDate);
   const [selected, setSelected] = useState(localDate);
@@ -76,8 +88,8 @@ export default function App() {
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
     <Calendar viewDate={viewDate} tasks={visible} allTasks={tasks} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask} onSave={save} onDelete={remove} onAdd={addTask} newTaskId={newTaskId} onToggle={toggle}/>
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span></div>
-    </section><aside className="day-panel"><DayAgenda date={selected} tasks={tasks.filter(task => task.date === selected)} activeTaskId={editing} onSave={save} onSelect={openTask} onToggle={toggle} onDelete={remove} onMemo={updateMemo}/></aside></div>
-    <div className="feedback" role="status">{storageError || notice}</div></main>
+    </section><aside className="day-panel"><DayAgenda date={selected} dayMemo={dailyMemos.notes[selected] || ''} onDayMemo={text => updateDayMemo(selected, text)} tasks={tasks.filter(task => task.date === selected)} activeTaskId={editing} onSave={save} onSelect={openTask} onToggle={toggle} onDelete={remove} onMemo={updateMemo}/></aside></div>
+    <div className="feedback" role="status">{storageError || dailyMemos.error || notice}</div></main>
     {deleted.length > 0 && <div className="undo-stack" aria-label="삭제한 일정 복구">{deleted.map(item => <div className="undo-toast" key={item.token}><span role="status">‘{item.task.title}’ 삭제됨</span><button type="button" onClick={() => restore(item)} aria-label={`${item.task.title} 복구`}>복구</button></div>)}</div>}
   </div>;
 }

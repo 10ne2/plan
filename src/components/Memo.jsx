@@ -7,12 +7,12 @@ function fitHeight(input) {
   const style = getComputedStyle(input);
   input.style.height = `${input.scrollHeight + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)}px`;
 }
-export default function Memo({ value, onChange }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('');
+export default function Memo({ value, onChange, autoEdit = false, label = '일정 메모' }) {
+  const [editing, setEditing] = useState(autoEdit);
+  const [draft, setDraft] = useState(() => autoEdit ? bulletText(value) : '');
   const editor = useRef(null);
   const composing = useRef(false);
-  const selection = useRef(null);
+  const selection = useRef(autoEdit ? [bulletText(value).length, bulletText(value).length] : null);
   useLayoutEffect(() => {
     if (selection.current && editor.current) { editor.current.setSelectionRange(...selection.current); selection.current = null; }
   });
@@ -46,7 +46,7 @@ export default function Memo({ value, onChange }) {
     update(plainText(normalized));
   }
   const text = value;
-  return <section className="memo-panel" aria-label="일정 메모">
-    {editing ? <textarea ref={editor} className="memo-editor" aria-label="메모 작성" autoFocus rows={1} value={draft} placeholder="메모 입력" onChange={change} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; change(e); }} onBlur={() => { update(plainText(draft)); setEditing(false); }} onKeyDown={e => { if (e.key === 'Escape' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}/> : <button type="button" className={`memo-content ${text ? '' : 'memo-placeholder'}`} aria-label="메모 편집" onClick={startEditing}>{text ? <span className="memo-list" role="list">{text.split('\n').map((line, index) => <span className="memo-list-item" role="listitem" key={index}><span aria-hidden="true">·</span><span>{line.replace(/^· ?/, '') || '\u00a0'}</span></span>)}</span> : '클릭하여 메모 작성'}</button>}
+  return <section className="memo-panel" aria-label={label}>
+    {editing ? <textarea ref={editor} className="memo-editor" aria-label={label === '하루 메모' ? '하루 메모 작성' : '메모 작성'} autoFocus rows={1} value={draft} placeholder="메모 입력" onChange={change} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; change(e); }} onBlur={() => { update(plainText(draft)); setEditing(false); }} onKeyDown={e => { if (e.key === 'Escape' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}/> : <button type="button" className={`memo-content ${text ? '' : 'memo-placeholder'}`} aria-label={label === '하루 메모' ? '하루 메모 편집' : '메모 편집'} onClick={startEditing}>{text ? <span className="memo-list" role="list">{text.split('\n').map((line, index) => <span className="memo-list-item" role="listitem" key={index}><span aria-hidden="true">·</span><span>{line.replace(/^· ?/, '') || '\u00a0'}</span></span>)}</span> : label === '하루 메모' ? '클릭하여 하루 메모 작성' : '클릭하여 메모 작성'}</button>}
   </section>;
 }
