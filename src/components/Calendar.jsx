@@ -3,7 +3,12 @@ import InlineTitle from './InlineTitle';
 import { weekDates, formatDate } from '../data';
 export default function Calendar({ viewDate, tasks, allTasks, today, selected, onSelect, onEdit, activeTaskId, onSave, onDelete, onAdd, newTaskId, onToggle }) {
   const days = weekDates(viewDate);
-  return <div className="week-scroll" tabIndex={0} aria-label="주간 달력, 가로로 스크롤"><div className="week-grid">{days.map((date, index) => {
+  const counts = days.map(date => allTasks.filter(task => task.date === date).length);
+  const widthStyle = {
+    gridTemplateColumns: counts.map(count => `minmax(calc(var(--day-base) + ${count * 12}px), 1fr)`).join(' '),
+    minWidth: `calc(var(--day-base) * 7 + ${counts.reduce((sum, count) => sum + count, 0) * 12}px)`,
+  };
+  return <div className="week-scroll" tabIndex={0} aria-label="주간 달력, 가로로 스크롤"><div className="week-grid" style={widthStyle}>{days.map((date, index) => {
     const items = tasks.filter(task => task.date === date);
     const total = allTasks.filter(task => task.date === date);
     return <section key={date} onClick={event => { if (!event.target.closest('button, input')) onSelect(date); }} aria-label={date} className={`week-day ${date === today ? 'is-today' : ''} ${date === selected ? 'is-selected' : ''}`}>
