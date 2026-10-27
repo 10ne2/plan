@@ -1,10 +1,20 @@
 import React from "react";
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { initialTasks, STORAGE_KEY, validTasks, localDate, weekDates } from './data';
 import DayAgenda from './components/DayAgenda';
 import Calendar from './components/Calendar';
 
 export default function App() {
+  const topRef = useRef(null);
+  const [topHeight, setTopHeight] = useState(0);
+  useLayoutEffect(() => {
+    const top = topRef.current;
+    const measure = () => setTopHeight(top.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(top);
+    return () => observer.disconnect();
+  }, []);
   const [storageError, setStorageError] = useState('');
   const [tasks, setTasks] = useState(() => {
     try { const raw = localStorage.getItem(STORAGE_KEY); if (raw === null) return initialTasks(); const data = JSON.parse(raw); return validTasks(data) ? data : initialTasks(); } catch { return initialTasks(); }
@@ -81,10 +91,10 @@ export default function App() {
   const days = weekDates(viewDate);
   const weekTasks = visible.filter(task => task.date >= days[0] && task.date <= days[6]);
   const weekLabel = `${days[0].replaceAll('-', '.')} — ${days[6].replaceAll('-', '.')}`;
-  return <div className="planner-shell">
-    <main className="planner-main"><div className="planner-top"><section className="planner-title"><h1>일정 캘린더</h1></section>
+  return <div className="planner-shell" style={{ '--top-height': `${topHeight}px` }}>
+    <main className="planner-main"><div className="planner-top" ref={topRef}><section className="planner-title"><h1>일정 캘린더</h1></section>
     <section className="summary-bar" aria-label="진행 현황"><div className="summary-progress"><span>전체 진행률 <strong>{percentage}%</strong></span><div className="progress-track" role="progressbar" aria-label="전체 진행률" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}><div style={{ width: `${percentage}%` }}/></div></div><div className="summary-progress"><span>오늘 진행률 <strong>{todayPercentage}%</strong></span><div className="progress-track" role="progressbar" aria-label="오늘 진행률" aria-valuenow={todayPercentage} aria-valuemin={0} aria-valuemax={100}><div style={{ width: `${todayPercentage}%` }}/></div><small className="progress-count">{todayCompleted} / {todayTasks.length} 완료</small></div><div><span>완료</span><strong>{completed}<small> / {tasks.length}</small></strong></div><div><span>남은 작업</span><strong>{tasks.length - completed}<small>개</small></strong></div></section>
-    </div><div className="calendar-layout"><section className="calendar-panel" aria-label="주간 일정"><div className="calendar-toolbar"><div className="month-controls"><h2>{weekLabel}</h2><button className="icon-button" aria-label="이전 주" onClick={() => navigate(-1)}>‹</button><button className="icon-button" aria-label="다음 주" onClick={() => navigate(1)}>›</button><button className="secondary today-button" onClick={() => selectDate(today)}>오늘</button></div><span className="month-count">이번 주 일정 {weekTasks.length}개</span></div>
+    </div><div className="planner-top-space" aria-hidden="true" style={{ height: topHeight }}/><div className="calendar-layout"><section className="calendar-panel" aria-label="주간 일정"><div className="calendar-toolbar"><div className="month-controls"><h2>{weekLabel}</h2><button className="icon-button" aria-label="이전 주" onClick={() => navigate(-1)}>‹</button><button className="icon-button" aria-label="다음 주" onClick={() => navigate(1)}>›</button><button className="secondary today-button" onClick={() => selectDate(today)}>오늘</button></div><span className="month-count">이번 주 일정 {weekTasks.length}개</span></div>
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
     <Calendar viewDate={viewDate} tasks={visible} allTasks={tasks} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask} onSave={save} onDelete={remove} onAdd={addTask} newTaskId={newTaskId} onToggle={toggle}/>
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span></div>
