@@ -23,3 +23,5 @@
 .daily-memo{margin:0 0 18px}.daily-memo .memo-panel{border:0;margin:0;padding:0}.daily-memo .memo-content,.daily-memo .memo-editor{background:#f5f7ef;padding:9px;min-height:50px}.daily-memo .memo-placeholder{color:#98a28c}.agenda-move .agenda-add-memo{font-size:13pt;line-height:1;padding:0 3px;color:#83946e}
 
 .week-grid{--day-base:136px}@media(max-width:760px){.week-grid{--day-base:150px}}
+
+.summary-bar{position:sticky;top:0;z-index:30;box-shadow:0 3px 12px #35402c0d}.calendar-panel{height:auto;min-height:var(--planner-height)}.week-scroll{flex:1 0 auto;overflow-x:auto;overflow-y:hidden}.week-grid{height:auto;min-height:620px;grid-template-columns:repeat(7,minmax(var(--day-base),1fr));min-width:calc(var(--day-base) * 7);grid-template-rows:auto}.week-day{overflow:visible}.week-tasks{flex:1;min-height:350px;max-height:none;overflow:visible}.calendar-task,.inline-title-input{scroll-margin-top:240px}@media(max-width:760px){.week-grid{min-height:520px}.week-tasks{min-height:300px}.calendar-task,.inline-title-input{scroll-margin-top:380px}}
