@@ -53,6 +53,7 @@ export default function App() {
     });
     setNotice('일정을 복구했습니다.');
   }
+  function updateMemo(id, memo) { setTasks(current => current.map(task => task.id === id ? { ...task, memo } : task)); }
   function toggle(id) { setTasks(current => current.map(t => t.id === id ? { ...t, completed: !t.completed } : t)); }
   function openTask(task) { setEditing(task.id); setSelected(task.date); setViewDate(task.date); }
   function navigate(offset) {
@@ -78,7 +79,7 @@ export default function App() {
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
     <Calendar viewDate={viewDate} tasks={visible} allTasks={tasks} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask}/>
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정을 누르면 상세 보기</span></div>
-    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}<Memo date={selected}/></aside></div>
+    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}{activeTask && <Memo key={activeTask.id} value={activeTask.memo || ''} onChange={memo => updateMemo(activeTask.id, memo)}/>}</aside></div>
     <div className="feedback" role="status">{storageError || notice}</div></main>
     {deleted.length > 0 && <div className="undo-stack" aria-label="삭제한 일정 복구">{deleted.map(item => <div className="undo-toast" key={item.token}><span role="status">‘{item.task.title}’ 삭제됨</span><button type="button" onClick={() => restore(item)} aria-label={`${item.task.title} 복구`}>복구</button></div>)}</div>}
   </div>;
