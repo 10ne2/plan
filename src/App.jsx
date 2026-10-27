@@ -19,6 +19,12 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
   const [notice, setNotice] = useState('');
+  const [deleted, setDeleted] = useState([]);
+  useEffect(() => {
+    if (!deleted.length) return;
+    const timer = setTimeout(() => setDeleted(current => current.filter(item => item.expires > Date.now())), Math.max(0, Math.min(...deleted.map(item => item.expires)) - Date.now()));
+    return () => clearTimeout(timer);
+  }, [deleted]);
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); setStorageError(''); } catch { setStorageError('브라우저 저장 공간에 접근할 수 없습니다. 변경 내용은 현재 화면에만 유지됩니다.'); } }, [tasks]);
   useEffect(() => { const timer = setInterval(() => setToday(localDate()), 30000); return () => clearInterval(timer); }, []);
   const completed = tasks.filter(t => t.completed).length;
@@ -33,7 +39,20 @@ export default function App() {
     setMonth(task.date.slice(0, 7)); setSelected(task.date);
     setNotice('일정을 수정했습니다.');
   }
-  function remove(task) { if (window.confirm(`‘${task.title}’ 일정을 삭제할까요?`)) { setTasks(current => current.filter(t => t.id !== task.id)); setEditing(null); setNotice('일정을 삭제했습니다.'); } }
+  function remove(task) {
+    setDeleted(current => [...current, { token: crypto.randomUUID(), task, index: tasks.findIndex(t => t.id === task.id), expires: Date.now() + 10000 }]);
+    setTasks(current => current.filter(t => t.id !== task.id));
+    setEditing(null); setNotice('');
+  }
+  function restore(item) {
+    setDeleted(current => current.filter(entry => entry.token !== item.token));
+    if (item.expires <= Date.now()) return;
+    setTasks(current => {
+      if (current.some(task => task.id === item.task.id)) return current;
+      const restored = [...current]; restored.splice(Math.max(0, item.index), 0, item.task); return restored;
+    });
+    setNotice('일정을 복구했습니다.');
+  }
   function toggle(id) { setTasks(current => current.map(t => t.id === id ? { ...t, completed: !t.completed } : t)); }
   function openTask(task) { setEditing(task.id); setSelected(task.date); setMonth(task.date.slice(0, 7)); }
   function navigate(offset) {
@@ -58,5 +77,6 @@ export default function App() {
     <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정을 누르면 상세 보기</span></div>
     </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}<Memo date={selected}/></aside></div>
     <div className="feedback" role="status">{storageError || notice}</div></main>
+    {deleted.length > 0 && <div className="undo-stack" aria-label="삭제한 일정 복구">{deleted.map(item => <div className="undo-toast" key={item.token}><span role="status">‘{item.task.title}’ 삭제됨</span><button type="button" onClick={() => restore(item)} aria-label={`${item.task.title} 복구`}>복구</button></div>)}</div>}
   </div>;
 }
