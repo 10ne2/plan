@@ -12,3 +12,11 @@ export function validTasks(value) {
 export function formatDate(value, options = { month: 'long', day: 'numeric', weekday: 'long' }) {
   return new Date(`${value}T12:00:00`).toLocaleDateString('ko-KR', options);
 }
+export function weekDates(value) {
+  const start = new Date(`${value}T12:00:00`);
+  start.setDate(start.getDate() - (start.getDay() + 6) % 7);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start); date.setDate(start.getDate() + index);
+    return localDate(date);
+  });
+}
