@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState, useId } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 function plainText(text) { return text.split('\n').map(line => line.replace(/^· ?/, '')).join('\n'); }
 function bulletText(text) { return text.split('\n').map(line => `· ${line.replace(/^· ?/, '')}`).join('\n'); }
 function fitHeight(input) {
@@ -8,7 +8,6 @@ function fitHeight(input) {
   input.style.height = `${input.scrollHeight + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)}px`;
 }
 export default function Memo({ value, onChange }) {
-  const headingId = useId();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const editor = useRef(null);
@@ -47,8 +46,7 @@ export default function Memo({ value, onChange }) {
     update(plainText(normalized));
   }
   const text = value;
-  return <section className="memo-panel" aria-labelledby={headingId}>
-    <div className="memo-heading"><h2 id={headingId}>일정 메모</h2></div>
+  return <section className="memo-panel" aria-label="일정 메모">
     {editing ? <textarea ref={editor} className="memo-editor" aria-label="메모 작성" autoFocus rows={1} value={draft} placeholder="메모 입력" onChange={change} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={e => { composing.current = false; change(e); }} onBlur={() => { update(plainText(draft)); setEditing(false); }} onKeyDown={e => { if (e.key === 'Escape' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}/> : <button type="button" className={`memo-content ${text ? '' : 'memo-placeholder'}`} aria-label="메모 편집" onClick={startEditing}>{text ? <span className="memo-list" role="list">{text.split('\n').map((line, index) => <span className="memo-list-item" role="listitem" key={index}><span aria-hidden="true">·</span><span>{line.replace(/^· ?/, '') || '\u00a0'}</span></span>)}</span> : '클릭하여 메모 작성'}</button>}
   </section>;
 }

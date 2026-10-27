@@ -49,7 +49,7 @@ export default function App() {
       if (current.some(task => task.id === item.task.id)) return current;
       const restored = [...current]; restored.splice(Math.max(0, item.index), 0, item.task); return restored;
     });
-    setNotice('일정을 복구했습니다.');
+    setNotice('');
   }
   function updateMemo(id, memo) { setTasks(current => current.map(task => task.id === id ? { ...task, memo } : task)); }
   function toggle(id) { setTasks(current => current.map(t => t.id === id ? { ...t, completed: !t.completed } : t)); }
