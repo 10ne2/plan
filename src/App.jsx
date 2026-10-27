@@ -1,13 +1,10 @@
 import React from "react";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { initialTasks, STORAGE_KEY, validTasks, localDate, weekDates } from './data';
-import TaskDetails from './components/TaskDetails';
+import DayAgenda from './components/DayAgenda';
 import Calendar from './components/Calendar';
-import QuickAdd from './components/QuickAdd';
-import Memo from './components/Memo';
 
 export default function App() {
-  const quickInput = useRef(null);
   const [storageError, setStorageError] = useState('');
   const [tasks, setTasks] = useState(() => {
     try { const raw = localStorage.getItem(STORAGE_KEY); if (raw === null) return initialTasks(); const data = JSON.parse(raw); return validTasks(data) ? data : initialTasks(); } catch { return initialTasks(); }
@@ -18,6 +15,7 @@ export default function App() {
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
+  const [newTaskId, setNewTaskId] = useState(null);
   const [notice, setNotice] = useState('');
   const [deleted, setDeleted] = useState([]);
   useEffect(() => {
@@ -63,12 +61,11 @@ export default function App() {
     setViewDate(next); setSelected(next); setEditing(null);
   }
   function selectDate(date) { setSelected(date); setViewDate(date); setEditing(null); }
-  function quickAdd(task) {
-    setTasks(current => [...current, { ...task, id: crypto.randomUUID(), completed: false }]);
-    selectDate(task.date); setFilter('all'); setQuery('');
-    setNotice('일정을 추가했습니다.');
+  function addTask(date) {
+    const task = { id: crypto.randomUUID(), title: '새 일정', date, completed: false, memo: '' };
+    setTasks(current => [...current, task]); setSelected(date); setViewDate(date);
+    setEditing(task.id); setNewTaskId(task.id); setFilter('all'); setQuery(''); setNotice('');
   }
-  const activeTask = tasks.find(t => t.id === editing);
   const days = weekDates(viewDate);
   const weekTasks = visible.filter(task => task.date >= days[0] && task.date <= days[6]);
   const weekLabel = `${days[0].replaceAll('-', '.')} — ${days[6].replaceAll('-', '.')}`;
@@ -77,9 +74,9 @@ export default function App() {
     <section className="summary-bar" aria-label="진행 현황"><div className="summary-progress"><span>전체 진행률 <strong>{percentage}%</strong></span><div className="progress-track" role="progressbar" aria-label="전체 진행률" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}><div style={{ width: `${percentage}%` }}/></div></div><div className="summary-progress"><span>오늘 진행률 <strong>{todayPercentage}%</strong></span><div className="progress-track" role="progressbar" aria-label="오늘 진행률" aria-valuenow={todayPercentage} aria-valuemin={0} aria-valuemax={100}><div style={{ width: `${todayPercentage}%` }}/></div><small className="progress-count">{todayCompleted} / {todayTasks.length} 완료</small></div><div><span>완료</span><strong>{completed}<small> / {tasks.length}</small></strong></div><div><span>남은 작업</span><strong>{tasks.length - completed}<small>개</small></strong></div><div className="today-summary"><div className="today-summary-heading"><span>오늘 일정</span><span>{todayTasks.length}개</span></div>{todayTasks.length ? <ul>{todayTasks.map(task => <li key={task.id}><input className="completion-checkbox" type="checkbox" checked={task.completed} onChange={() => toggle(task.id)} aria-label={`${task.title} 완료`}/><button className={task.completed ? 'today-completed' : ''} onClick={() => openTask(task)}>{task.title}<span>{task.completed ? '완료' : '미완료'}</span></button></li>)}</ul> : <p>오늘 일정이 없습니다.</p>}</div></section>
     <div className="calendar-layout"><section className="calendar-panel" aria-label="주간 일정"><div className="calendar-toolbar"><div className="month-controls"><h2>{weekLabel}</h2><button className="icon-button" aria-label="이전 주" onClick={() => navigate(-1)}>‹</button><button className="icon-button" aria-label="다음 주" onClick={() => navigate(1)}>›</button><button className="secondary today-button" onClick={() => selectDate(today)}>오늘</button></div><span className="month-count">이번 주 일정 {weekTasks.length}개</span></div>
     <div className="calendar-filters"><div className="tabs" aria-label="일정 필터">{[['all', '전체'], ['pending', '미완료'], ['done', '완료']].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value)}>{label}</button>)}</div><label className="search"><span aria-hidden="true">⌕</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="작업 검색" aria-label="작업 검색"/></label></div>
-    <Calendar viewDate={viewDate} tasks={visible} allTasks={tasks} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask}/>
-    <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정을 누르면 상세 보기</span></div>
-    </section><aside className="day-panel">{activeTask ? <TaskDetails key={`${activeTask.id}-${activeTask.title}-${activeTask.date}`} task={activeTask} onSave={save} onDelete={remove} onToggle={toggle}/> : <QuickAdd date={selected} onDateChange={selectDate} onAdd={quickAdd} inputRef={quickInput}/>}{activeTask && <Memo key={activeTask.id} value={activeTask.memo || ''} onChange={memo => updateMemo(activeTask.id, memo)}/>}</aside></div>
+    <Calendar viewDate={viewDate} tasks={visible} allTasks={tasks} today={today} selected={selected} onSelect={selectDate} activeTaskId={editing} onEdit={openTask} onSave={save} onDelete={remove} onAdd={addTask} newTaskId={newTaskId}/>
+    <div className="calendar-caption"><span><i/> 미완료 <i className="done-dot"/> 완료</span><span>일정 클릭으로 수정 · ＋로 추가</span></div>
+    </section><aside className="day-panel"><DayAgenda date={selected} tasks={tasks.filter(task => task.date === selected)} activeTaskId={editing} onSave={save} onSelect={openTask} onToggle={toggle} onDelete={remove} onMemo={updateMemo}/></aside></div>
     <div className="feedback" role="status">{storageError || notice}</div></main>
     {deleted.length > 0 && <div className="undo-stack" aria-label="삭제한 일정 복구">{deleted.map(item => <div className="undo-toast" key={item.token}><span role="status">‘{item.task.title}’ 삭제됨</span><button type="button" onClick={() => restore(item)} aria-label={`${item.task.title} 복구`}>복구</button></div>)}</div>}
   </div>;
